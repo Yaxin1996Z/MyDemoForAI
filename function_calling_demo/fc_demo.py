@@ -94,15 +94,14 @@ tools = [
 # ============================================================
 # 2. 工具执行函数（真正的业务逻辑）
 # ============================================================
-# Key = 工具名，Value = 实际执行函数
-# 这就是 Agent 的 tools 节点在做的事
+# 用带参数名的函数定义 —— 和 @tool 一样的风格
+# 关键是：如何把 JSON Schema 的 args dict 传入这些函数？
+#   看下面的 call_tool() 分发器 —— 用 **kwargs 解包
+#   这就是 @tool 在背后做的事
 
 
-def exec_get_weather(args: dict) -> str:
-    """查天气 —— 模拟真实 API 调用"""
-    location = args["location"]
-    unit = args.get("unit", "celsius")
-    # 模拟不同城市不同温度
+def get_weather(location: str, unit: str = "celsius") -> str:
+    """获取指定城市的天气信息"""
     db = {"上海": 25, "北京": 18, "深圳": 30, "哈尔滨": 10}
     temp = db.get(location, 22)
     if unit == "fahrenheit":
@@ -111,31 +110,49 @@ def exec_get_weather(args: dict) -> str:
     return f"{location} 当前 {temp}°C，{'☀️' if temp > 20 else '⛅'}"
 
 
-def exec_calculator(args: dict) -> str:
-    """计算器 —— 执行数学表达式"""
-    expr = args["expression"]
+def calculator(expression: str) -> str:
+    """计算数学表达式的结果"""
     try:
-        # 安全 eval：只允许基本数学运算
-        result = eval(expr, {"__builtins__": {}}, {})
-        return f"{expr} = {result}"
+        result = eval(expression, {"__builtins__": {}}, {})
+        return f"{expression} = {result}"
     except Exception as e:
         return f"计算错误：{e}"
 
 
-def exec_send_email(args: dict) -> str:
-    """发邮件 —— 模拟发送"""
-    to = args["to"]
-    subject = args["subject"]
-    # 不真正发送，模拟返回成功
+def send_email(to: str, subject: str, body: str = "") -> str:
+    """发送邮件给指定收件人"""
     return f"邮件已发送至 {to}，主题：「{subject}」"
 
 
-# 工具名 → 执行函数的映射表
-TOOL_FUNCTIONS = {
-    "get_weather": exec_get_weather,
-    "calculator": exec_calculator,
-    "send_email": exec_send_email,
+# ============================================================
+# 2.5 工具分发器 —— 这就是 @tool 的核心机制
+# ============================================================
+# LangChain 的 @tool 装饰器本质上做了两件事：
+#   ① 偷看你的函数签名 → 生成 JSON Schema（函数名/参数名/类型/注解）
+#   ② 收到 LLM 的 tool_calls 时 → 用 **kwargs 把 args dict 解包传入
+#
+# 下面就是手写版本：
+
+TOOL_FUNCTIONS: dict[str, callable] = {
+    "get_weather": get_weather,
+    "calculator": calculator,
+    "send_email": send_email,
 }
+
+
+def call_tool(name: str, args: dict) -> str:
+    """
+    通用工具分发器：把 JSON args dict 解包为函数的命名参数。
+
+    这行就是核心：executor(**args)  ← @tool 帮你做的也是这件事
+    """
+    executor = TOOL_FUNCTIONS.get(name)
+    if not executor:
+        return f"错误：未知工具 {name}"
+    try:
+        return executor(**args)
+    except Exception as e:
+        return f"工具执行错误：{e}"
 
 
 # ============================================================
@@ -190,12 +207,8 @@ def run(query: str, max_turns: int = 5, verbose: bool = True):
                 print(f"  🤔 AI 思考: {thought}")
                 print(f"  🛠  调工具: {func_name}({json.dumps(func_args, ensure_ascii=False)})")
 
-            # 执行真实的函数
-            executor = TOOL_FUNCTIONS.get(func_name)
-            if executor:
-                result = executor(func_args)
-            else:
-                result = f"错误：未知工具 {func_name}"
+            # 执行真实的函数（通过通用分发器解包参数）
+            result = call_tool(func_name, func_args)
 
             if verbose:
                 print(f"  📦  结果: {result}\n")
