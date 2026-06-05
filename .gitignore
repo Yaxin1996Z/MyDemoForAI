@@ -20,3 +20,7 @@ venv/
 # 系统
 .DS_Store
 Thumbs.db
+
+# RAG Demo - 本地路径配置
+rag_demo/config.py
+rag_demo/rag_db/

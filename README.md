@@ -12,6 +12,9 @@ MyDemoForAI/
 │   ├── chain_demo.py              # Chain Demo：Prompt → LLM → Parser 流水线
 │   ├── agent_demo.py              # Agent Demo：ReAct 循环 + Tool 调用
 │   └── langgraph_demo.py          # LangGraph Demo：手写 StateGraph
+├── rag_demo/                      # RAG Demo：个人知识库问答
+│   ├── rag_demo.py               # RAG 全流程：读取笔记 → 分块 → Chroma → 检索 → LLM 生成
+│   └── rag_db/                    # Chroma 持久化向量库（自动生成）
 ├── .venv/                         # Python 虚拟环境
 ├── pyproject.toml                 # 项目依赖配置
 └── README.md
@@ -53,7 +56,23 @@ python langchain_demo\agent_demo.py
 
 演示 ReAct 循环：Agent 自动判断是否调用 `calculator` 和 `get_current_time` 工具。
 
-### 5. 运行 LangGraph Demo
+### 5. 运行 RAG Demo
+
+基于个人学习笔记的知识库问答。读取技能面板下的 Markdown 笔记 → 分块 → Chroma 向量库 → 检索 → LLM 生成带引用的回答。
+
+**首次使用前**：复制 `rag_demo/config.example.py` 为 `rag_demo/config.py`，填入本地路径：
+
+```bash
+cp rag_demo/config.example.py rag_demo/config.py
+# 然后编辑 config.py 中的 NOTES_DIR / DB_DIR / EMBED_MODEL_PATH
+```
+
+```bash
+python rag_demo\rag_demo.py              # 运行（自动建库）
+python rag_demo\rag_demo.py --rebuild    # 强制重建索引
+```
+
+### 6. 运行 LangGraph Demo
 
 ```bash
 python langchain_demo\langgraph_demo.py
