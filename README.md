@@ -92,7 +92,7 @@ LangGraph StateGraph     ← 白盒控制，灵活定制
 
 ## 环境要求
 
-- Python >= 3.14
+- Python >= 3.12
 - DEEPSEEK_API_KEY 环境变量（已配置）
 
 ## 技术栈
