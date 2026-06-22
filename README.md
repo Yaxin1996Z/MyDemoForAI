@@ -127,6 +127,32 @@ python crewai_demo\real_crew.py
 
 多角色 Agent 协作：Planner / Researcher / Writer / Reviewer 四角色编排。
 
+### 11. 运行 Docker Demo
+
+构建镜像并启动容器：
+
+```bash
+cd docker-demo
+docker build -t my-demo-app .
+docker run -d -p 8000:8000 --name my-demo -e CONTAINER_NAME=my-first-container my-demo-app
+```
+
+访问 http://localhost:8000 查看容器环境信息（hostname / 时间 / Python 版本）。
+
+**演示内容：**
+- `Dockerfile` 五段式：FROM → WORKDIR → COPY → EXPOSE → CMD
+- 镜像构建与容器启动
+- 端口映射与环境变量注入
+- 容器内 Web 服务
+
+```bash
+# 常用操作
+docker ps                    # 查看运行中的容器
+docker logs my-demo          # 查看容器日志
+docker stop my-demo          # 停止
+docker rm my-demo            # 删除
+```
+
 ## 学习路径
 
 ```
