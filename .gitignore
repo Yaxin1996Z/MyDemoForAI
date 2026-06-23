@@ -21,6 +21,16 @@ venv/
 .DS_Store
 Thumbs.db
 
+# Node.js
+node_modules/
+
+# TypeScript 入门练习
+ts-intro/
+
 # RAG Demo - 本地路径配置
 rag_demo/config.py
 rag_demo/rag_db/
+
+# Milvus Demo
+milvus_demo/volumes/
+milvus_demo/*.db
